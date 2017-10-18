@@ -3,47 +3,37 @@ pragma solidity ^0.4.16;
 import "./MyWishToken.sol";
 import "./MyWishConsts.sol";
 import "./MyWishRateProvider.sol";
-import "./zeppelin/crowdsale/Crowdsale.sol";
+import "./zeppelin/crowdsale/FinalizableCrowdsale.sol";
 
-contract MyWishCrowdsale is usingMyWishConsts, Crowdsale {
-    uint constant teamTokens = 11000000 * TOKEN_DECIMAL_MULTIPLIER;
-    uint constant bountyTokens = 2000000 * TOKEN_DECIMAL_MULTIPLIER;
-    uint constant icoTokens = 3038800 * TOKEN_DECIMAL_MULTIPLIER;
-    uint constant minimalPurchase = 0.05 ether;
-    address constant teamAddress = 0xE4F0Ff4641f3c99de342b06c06414d94A585eFfb;
-    address constant bountyAddress = 0x76d4136d6EE53DB4cc087F2E2990283d5317A5e9;
-    address constant icoAccountAddress = 0x195610851A43E9685643A8F3b49F0F8a019204f1;
-
+contract MyWishCrowdsale is usingMyWishConsts, FinalizableCrowdsale {
     MyWishRateProviderI public rateProvider;
 
     function MyWishCrowdsale(
-            uint32 _startTime,
-            uint32 _endTime,
+            uint _startTime,
+            uint _endTime,
             uint _softCapWei,
             uint _hardCapTokens
     )
-        RefundableCrowdsale(_startTime, _endTime, _hardCapTokens * TOKEN_DECIMAL_MULTIPLIER, 0x80826b5b717aDd3E840343364EC9d971FBa3955C, _softCapWei) {
+            Crowdsale(_startTime, _endTime, _hardCapTokens * TOKEN_DECIMAL_MULTIPLIER, COLD_WALLET) {
 
-        token.mint(teamAddress,  teamTokens);
-        token.mint(bountyAddress, bountyTokens);
-        token.mint(icoAccountAddress, icoTokens);
+        token.mint(TEAM_ADDRESS, TEAM_TOKENS);
+        token.mint(BOUNTY_ADDRESS, BOUNTY_TOKENS);
+        token.mint(PREICO_ADDRESS, PREICO_TOKENS);
 
-        MyWillToken(token).addExcluded(teamAddress);
-        MyWillToken(token).addExcluded(bountyAddress);
-        MyWillToken(token).addExcluded(icoAccountAddress);
+        MyWishToken(token).addExcluded(TEAM_ADDRESS);
+        MyWishToken(token).addExcluded(BOUNTY_ADDRESS);
+        MyWishToken(token).addExcluded(PREICO_ADDRESS);
 
-        MyWillRateProvider provider = new MyWillRateProvider();
+        MyWishRateProvider provider = new MyWishRateProvider();
         provider.transferOwnership(owner);
         rateProvider = provider;
-
-        // pre ICO
     }
 
     /**
      * @dev override token creation to integrate with MyWill token.
      */
     function createTokenContract() internal returns (MintableToken) {
-        return new MyWillToken();
+        return new MyWishToken();
     }
 
     /**
@@ -54,7 +44,7 @@ contract MyWishCrowdsale is usingMyWishConsts, Crowdsale {
     }
 
     function getBaseRate() internal constant returns (uint) {
-        return rateProvider.getRate(msg.sender, soldTokens, minimalPurchase);
+        return rateProvider.getRate(msg.sender, soldTokens, MINIMAL_PURCHASE);
     }
 
     /**
@@ -70,20 +60,28 @@ contract MyWishCrowdsale is usingMyWishConsts, Crowdsale {
      */
     function setRateProvider(address _rateProviderAddress) onlyOwner {
         require(_rateProviderAddress != 0);
-        rateProvider = MyWillRateProviderI(_rateProviderAddress);
+        rateProvider = MyWishRateProviderI(_rateProviderAddress);
     }
 
     /**
      * @dev Admin can move end time.
      * @param _endTime New end time.
      */
-    function setEndTime(uint32 _endTime) onlyOwner notFinalized {
+    function setEndTime(uint _endTime) onlyOwner notFinalized {
         require(_endTime > startTime);
         endTime = _endTime;
     }
 
+    function setHardCap(uint _hardCapTokens) onlyOwner notFinalized {
+        hardCap = _hardCapTokens * TOKEN_DECIMAL_MULTIPLIER;
+    }
+
+    function addExcluded(address _address) onlyOwner notFinalized {
+        MyWishToken(token).addExcluded(_address);
+    }
+
     function validPurchase(uint _amountWei, uint _actualRate, uint _totalSupply) internal constant returns (bool) {
-        if (_amountWei < minimalPurchase) {
+        if (_amountWei < MINIMAL_PURCHASE) {
             return false;
         }
         return super.validPurchase(_amountWei, _actualRate, _totalSupply);
@@ -92,9 +90,6 @@ contract MyWishCrowdsale is usingMyWishConsts, Crowdsale {
     function finalization() internal {
         super.finalization();
         token.finishMinting();
-        if (!goalReached()) {
-            return;
-        }
         MyWillToken(token).crowdsaleFinished();
         token.transferOwnership(owner);
     }

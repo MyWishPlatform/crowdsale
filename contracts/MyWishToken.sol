@@ -1,6 +1,6 @@
 pragma solidity ^0.4.16;
 
-import "./MyWillConsts.sol";
+import "./MyWishConsts.sol";
 import "./zeppelin/token/MintableToken.sol";
 
 contract MyWishToken is usingMyWishConsts, MintableToken {
@@ -14,11 +14,11 @@ contract MyWishToken is usingMyWishConsts, MintableToken {
     mapping(address => bool) excluded;
 
     function name() constant public returns (string _name) {
-        return "MyWish Token";
+        return TOKEN_NAME;
     }
 
     function symbol() constant public returns (bytes32 _symbol) {
-        return "WISH";
+        return TOKEN_SYMBOL;
     }
 
     function decimals() constant public returns (uint8 _decimals) {

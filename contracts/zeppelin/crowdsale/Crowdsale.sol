@@ -21,8 +21,8 @@ contract Crowdsale {
     MintableToken public token;
 
     // start and end timestamps where investments are allowed (both inclusive)
-    uint32 public startTime;
-    uint32 public endTime;
+    uint32 internal startTime;
+    uint32 internal endTime;
 
     // address where funds are collected
     address public wallet;
@@ -38,7 +38,7 @@ contract Crowdsale {
     /**
      * @dev Maximum amount of tokens to mint.
      */
-    uint public hardCap;
+    uint internal hardCap;
 
     /**
      * event for token purchase logging
@@ -49,16 +49,15 @@ contract Crowdsale {
      */
     event TokenPurchase(address indexed purchaser, address indexed beneficiary, uint value, uint amount);
 
-
-    function Crowdsale(uint32 _startTime, uint32 _endTime, uint _hardCap, address _wallet) {
+    function Crowdsale(uint _startTime, uint _endTime, uint _hardCap, address _wallet) {
         require(_startTime >= now);
         require(_endTime >= _startTime);
         require(_wallet != 0x0);
         require(_hardCap > 0);
 
         token = createTokenContract();
-        startTime = _startTime;
-        endTime = _endTime;
+        startTime = uint32(_startTime);
+        endTime = uint32(_endTime);
         hardCap = _hardCap;
         wallet = _wallet;
     }
@@ -106,21 +105,6 @@ contract Crowdsale {
         // calculate token amount to be created
         uint tokens = amountWei.mul(actualRate).div(rateScale);
 
-        // change, if minted token would be less
-        uint change = 0;
-
-        // if hard cap reached
-        if (tokens.add(totalSupply) > hardCap) {
-            // rest tokens
-            uint maxTokens = hardCap.sub(totalSupply);
-            uint realAmount = maxTokens.mul(rateScale).div(actualRate);
-
-            // rest tokens rounded by actualRate
-            tokens = realAmount.mul(actualRate).div(rateScale);
-            change = amountWei - realAmount;
-            amountWei = realAmount;
-        }
-
         // update state
         weiRaised = weiRaised.add(amountWei);
         soldTokens = soldTokens.add(tokens);
@@ -128,9 +112,6 @@ contract Crowdsale {
         token.mint(beneficiary, tokens);
         TokenPurchase(msg.sender, beneficiary, amountWei, tokens);
 
-        if (change != 0) {
-            msg.sender.transfer(change);
-        }
         forwardFunds(amountWei);
     }
 
@@ -147,7 +128,7 @@ contract Crowdsale {
     function validPurchase(uint _amountWei, uint _actualRate, uint _totalSupply) internal constant returns (bool) {
         bool withinPeriod = now >= startTime && now <= endTime;
         bool nonZeroPurchase = _amountWei != 0;
-        bool hardCapNotReached = _totalSupply <= hardCap.sub(_actualRate);
+        bool hardCapNotReached = _totalSupply <= hardCap;
 
         return withinPeriod && nonZeroPurchase && hardCapNotReached;
     }
@@ -157,7 +138,7 @@ contract Crowdsale {
      * @return true if crowdsale event has ended
      */
     function hasEnded() public constant returns (bool) {
-        return now > endTime || token.totalSupply() > hardCap.sub(getBaseRate());
+        return now > endTime || token.totalSupply() > hardCap;
     }
 
     /**
@@ -165,15 +146,5 @@ contract Crowdsale {
      */
     function hasStarted() public constant returns (bool) {
         return now >= startTime;
-    }
-
-    /**
-     * @dev Check this crowdsale event has ended considering with amount to buy.
-     * @param _value Amount to spend.
-     * @return true if crowdsale event has ended
-     */
-    function hasEnded(uint _value) public constant returns (bool) {
-        uint actualRate = getRate(_value);
-        return now > endTime || token.totalSupply() > hardCap.sub(actualRate);
     }
 }
