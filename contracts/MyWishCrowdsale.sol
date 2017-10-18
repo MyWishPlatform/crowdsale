@@ -11,10 +11,9 @@ contract MyWishCrowdsale is usingMyWishConsts, FinalizableCrowdsale {
     function MyWishCrowdsale(
             uint _startTime,
             uint _endTime,
-            uint _softCapWei,
             uint _hardCapTokens
     )
-            Crowdsale(_startTime, _endTime, _hardCapTokens * TOKEN_DECIMAL_MULTIPLIER, COLD_WALLET) {
+            FinalizableCrowdsale(_startTime, _endTime, _hardCapTokens * TOKEN_DECIMAL_MULTIPLIER, COLD_WALLET) {
 
         token.mint(TEAM_ADDRESS, TEAM_TOKENS);
         token.mint(BOUNTY_ADDRESS, BOUNTY_TOKENS);
@@ -69,11 +68,17 @@ contract MyWishCrowdsale is usingMyWishConsts, FinalizableCrowdsale {
      */
     function setEndTime(uint _endTime) onlyOwner notFinalized {
         require(_endTime > startTime);
-        endTime = _endTime;
+        endTime = uint32(_endTime);
     }
 
     function setHardCap(uint _hardCapTokens) onlyOwner notFinalized {
+        require(_hardCapTokens * TOKEN_DECIMAL_MULTIPLIER > hardCap);
         hardCap = _hardCapTokens * TOKEN_DECIMAL_MULTIPLIER;
+    }
+
+    function setStartTime(uint _startTime) onlyOwner notFinalized {
+        require(_startTime < endTime);
+        startTime = uint32(_startTime);
     }
 
     function addExcluded(address _address) onlyOwner notFinalized {
@@ -90,7 +95,7 @@ contract MyWishCrowdsale is usingMyWishConsts, FinalizableCrowdsale {
     function finalization() internal {
         super.finalization();
         token.finishMinting();
-        MyWillToken(token).crowdsaleFinished();
+        MyWishToken(token).crowdsaleFinished();
         token.transferOwnership(owner);
     }
 }

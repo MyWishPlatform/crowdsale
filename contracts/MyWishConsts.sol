@@ -16,5 +16,5 @@ contract usingMyWishConsts {
     address constant COLD_WALLET = 0x80826b5b717aDd3E840343364EC9d971FBa3955C;
 
     string constant TOKEN_NAME = "MyWish Token";
-    byte32 constant TOKEN_SYMBOL = "WISH";
+    bytes32 constant TOKEN_SYMBOL = "WISH";
 }

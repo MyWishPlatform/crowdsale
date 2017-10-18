@@ -50,7 +50,6 @@ contract Crowdsale {
     event TokenPurchase(address indexed purchaser, address indexed beneficiary, uint value, uint amount);
 
     function Crowdsale(uint _startTime, uint _endTime, uint _hardCap, address _wallet) {
-        require(_startTime >= now);
         require(_endTime >= _startTime);
         require(_wallet != 0x0);
         require(_hardCap > 0);
