@@ -28,9 +28,9 @@ contract MyWishRateProviderI {
 contract MyWishRateProvider is usingMyWishConsts, MyWishRateProviderI, Ownable {
     // rate calculate accuracy
     uint constant RATE_SCALE = 10000;
-    uint constant STEP_30 = 20000000 * TOKEN_DECIMAL_MULTIPLIER;
-    uint constant STEP_20 = 40000000 * TOKEN_DECIMAL_MULTIPLIER;
-    uint constant STEP_10 = 60000000 * TOKEN_DECIMAL_MULTIPLIER;
+    uint constant STEP_30 = 3200000 * TOKEN_DECIMAL_MULTIPLIER;
+    uint constant STEP_20 = 6400000 * TOKEN_DECIMAL_MULTIPLIER;
+    uint constant STEP_10 = 9600000 * TOKEN_DECIMAL_MULTIPLIER;
     uint constant RATE_30 = 1950 * RATE_SCALE;
     uint constant RATE_20 = 1800 * RATE_SCALE;
     uint constant RATE_10 = 1650 * RATE_SCALE;

@@ -2,8 +2,9 @@ pragma solidity ^0.4.16;
 
 import "./MyWishConsts.sol";
 import "./zeppelin/token/MintableToken.sol";
+import "./zeppelin/token/BurnableToken.sol";
 
-contract MyWishToken is usingMyWishConsts, MintableToken {
+contract MyWishToken is usingMyWishConsts, MintableToken, BurnableToken {
     /**
      * @dev Pause token transfer. After successfully finished crowdsale it becomes true.
      */
@@ -12,8 +13,6 @@ contract MyWishToken is usingMyWishConsts, MintableToken {
      * @dev Accounts who can transfer token even if paused. Works only during crowdsale.
      */
     mapping(address => bool) excluded;
-
-    event Burn(address indexed from, uint256 value);
 
     function name() constant public returns (string _name) {
         return TOKEN_NAME;
@@ -47,24 +46,16 @@ contract MyWishToken is usingMyWishConsts, MintableToken {
     }
 
     /**
-     * @dev Burn tokens from the sender balance.
-     * @param _value uint The amount of tokens to be burned.
-     */
-    function burn(uint _value) returns (bool) {
-        balances[msg.sender] = balances[msg.sender].sub(_value);
-        Burn(msg.sender, _value);
-        return true;
-    }
-
-    /**
      * @dev Burn tokens from the specified address.
      * @param _from     address The address which you want to burn tokens from.
      * @param _value    uint    The amount of tokens to be burned.
      */
     function burnFrom(address _from, uint256 _value) returns (bool) {
-        var _allowance = allowed[_from][msg.sender];
+        require(_value > 0);
+        var allowance = allowed[_from][msg.sender];
         balances[_from] = balances[_from].sub(_value);
-        allowed[_from][msg.sender] = _allowance.sub(_value);
+        totalSupply = totalSupply.sub(_value);
+        allowed[_from][msg.sender] = allowance.sub(_value);
         Burn(_from, _value);
         return true;
     }
