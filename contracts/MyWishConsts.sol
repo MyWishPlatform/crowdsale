@@ -5,7 +5,7 @@ contract usingMyWishConsts {
     uint8 constant TOKEN_DECIMALS_UINT8 = 18;
     uint constant TOKEN_DECIMAL_MULTIPLIER = 10 ** TOKEN_DECIMALS;
 
-    uint constant TEAM_TOKENS =   1100000 * TOKEN_DECIMAL_MULTIPLIER;
+    uint constant TEAM_TOKENS =   3161200 * TOKEN_DECIMAL_MULTIPLIER;
     uint constant BOUNTY_TOKENS = 2000000 * TOKEN_DECIMAL_MULTIPLIER;
     uint constant PREICO_TOKENS = 3038800 * TOKEN_DECIMAL_MULTIPLIER;
     uint constant MINIMAL_PURCHASE = 0.05 ether;
